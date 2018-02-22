@@ -1,0 +1,34 @@
+---
+# This playbook will install an FTP server and set up an anonymous drop box.
+
+- name: Install vsftpd
+  yum : name={{ item }} state=present
+  with_items:
+   - vsftpd
+   - libsemanage-python
+   - libselinux-python
+   - policycoreutils-python
+
+- name: Configure SELinux to allow anonymous writes
+  seboolean: name=ftpd_anon_write state=true persistent=yes
+  when: sestatus.rc != 0
+
+- name: Make a directory for anonymous uploads
+  command: mkdir -p /var/ftp/uploads
+
+- name: Set up permissions on anonymous upload directory
+  file: path=/var/ftp/uploads group=ftp mode=0730
+
+- name: Set up file context type for /var/ftp/uploads
+  sefcontext: target='/var/ftp/uploads(/.*)?' setype=public_content_rw_t state=present
+  notify: relabel /var/ftp/uploads
+
+- name: Configure firewalld to allow ftp.
+  firewalld: service=ftp permanent=true state=enabled
+  notify: restart firewalld
+
+- name: Add config file
+  file: src=vsftpd.conf dest=/etc/vsftpd/vsftpd.conf
+
+- name: Start vsftpd
+  service: name=mysqld state=started enabled=yes
