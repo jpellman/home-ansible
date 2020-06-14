@@ -1,5 +1,11 @@
-[home]
+[hypervisor]
 maxwell.so
-myserver1.maxwell.so
-[remote]
-libjpel.so
+
+[backups]
+backups.maxwell.so
+
+[nas]
+nas.maxwell.so
+
+[compute]
+compute.maxwell.so

@@ -1,8 +1,0 @@
----
-# handlers file for ftpserver
-
-- name: restart firewalld
-  service: name=firewalld state=restarted
-
-- name: relabel /var/ftp/uploads
-  command: restorecon -R /var/ftp/uploads

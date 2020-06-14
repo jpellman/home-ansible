@@ -4,11 +4,16 @@
   become: yes
   tasks:
     - name: Install screen.
-      yum: name=screen state=latest
+      yum: 
+        name: screen 
+        state: latest
     - name: Install htop.
-      yum: name=htop state=latest
+        name: htop
+        state: latest
     - name: Install whois.
-      yum: name=whois state=latest
+        name: whois
+        state: latest
     - name: Install temperature sensors.
-      yum: name=lm_sensors state=latest
+        name: lm_sensors
+        state: latest
 

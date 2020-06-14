@@ -1,2 +1,3 @@
-# HomelabAnsible
-Attempts at managing my home infrastructure using Ansible playbooks.
+# DomicileAnsible
+
+Attempts at managing my home infrastructure using Ansible roles and playbooks.
