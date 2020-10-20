@@ -8,4 +8,7 @@ backups.maxwell.so
 nas.maxwell.so
 
 [compute]
-compute.maxwell.so
+crick.so
+
+[compute_gpu]
+crick.so

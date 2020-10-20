@@ -1,0 +1,56 @@
+# This playbook is intended to build a host
+# that is capable of participating in various
+# volunteer grid computing projects,
+# such as GIMPS, BOINC, and FAH.
+# Currently only tested on CentOS 7
+
+- name: Install pre-requisites for GPU computing
+  hosts: compute_gpu
+  become: true
+  roles:
+    - role: ansible-role-nvidia-driver
+      tags: [ansible-role-nvidia-driver]
+
+- name: Install various volunteer grid computing projects
+  hosts: compute
+  become: true
+  tags: [grid-computing]
+  tasks:
+    - name: Disable SELinux
+      selinux:
+        state: disabled
+    - name: Install epel
+      yum:
+        pkg: epel-release
+        state: present
+    - name: Install folding@home
+      yum:
+        pkg: "{{ item }}"
+        state: present
+      loop:
+        - https://download.foldingathome.org/releases/public/release/fahclient/centos-6.7-64bit/v7.6/fahclient-7.6.20-1.x86_64.rpm
+        - https://download.foldingathome.org/releases/public/release/fahcontrol/centos-6.7-64bit/v7.6/fahcontrol-7.6.20-1.noarch.rpm
+        - https://download.foldingathome.org/releases/public/release/fahviewer/centos-6.7-64bit/v7.6/fahviewer-7.6.20-1.x86_64.rpm
+    - name: Make symlink for folding@home Python dependency issue
+      file:
+        src: /usr/lib/python2.7
+        dest: /usr/lib/python2.6
+        state: link
+    - name: Set default firewalld zone to public
+      command: firewall-cmd --set-default-zone=public
+    - name: Open up the FAH web client port
+      firewalld:
+        port: 7396/tcp
+        zone: public
+        permanent: yes
+        state: enabled
+    - name: Reload firewall
+      command: firewall-cmd --reload
+    - name: Install BOINC
+      yum:
+        pkg: "{{ item }}"
+        state: present
+      loop:
+        - boinc-client
+        - boinc-manager
+
