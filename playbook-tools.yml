@@ -1,5 +1,5 @@
 ---
-- hosts: home
+- hosts: all
   remote_user: jpellman
   become: yes
   tasks:
@@ -8,12 +8,15 @@
         name: screen 
         state: latest
     - name: Install htop.
+      yum: 
         name: htop
         state: latest
     - name: Install whois.
+      yum: 
         name: whois
         state: latest
     - name: Install temperature sensors.
+      yum: 
         name: lm_sensors
         state: latest
 
