@@ -1,0 +1,42 @@
+- name: Enable IOMMU kernel options for an Intel CPU.
+  hosts: hypervisor
+  vars:
+    grub_cmdline_add_args:
+      - quiet
+      - intel_iommu=on
+  tasks:
+    - name: Update bootloader kernel command line config file
+      lineinfile:
+        dest: /etc/default/grub
+        line: GRUB_CMDLINE_LINUX="{{ grub_cmdline_add_args | join(' ') }}"
+        regexp: '^GRUB_CMDLINE_LINUX="'
+      notify:
+        - 'Update grub'
+    - name: Add required modules
+      lineinfile:
+        dest: /etc/modules
+        line: "{{ item }}"
+      loop:
+          - vfio
+          - vfio_iommu_type1
+          - vfio_pci
+          - vfio_virqfd
+  handlers:
+    - name: Update grub
+      shell: /usr/sbin/update-grub
+
+- name: Configure GPU passthrough
+  hosts: hypervisor
+  tasks:
+    - name: Set up VFIO options
+      copy:
+        content: "options vfio-pci ids={{ gpu_device_ids | join(',') }}"
+        dest: /etc/modprobe.d/vfio.conf
+    - name: Blacklist GPU-related drivers
+      lineinfile:
+        dest: /etc/modprobe.d/blacklist.conf
+        line: "blacklist {{ item }}"
+      loop:
+          - radeon
+          - nouveau
+          - nvidia
