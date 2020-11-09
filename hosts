@@ -9,6 +9,8 @@ nas.maxwell.so
 
 [compute]
 crick.so
+franklin.so
 
 [compute_gpu]
 crick.so
+franklin.so

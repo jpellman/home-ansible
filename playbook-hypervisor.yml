@@ -4,6 +4,7 @@
     grub_cmdline_add_args:
       - quiet
       - intel_iommu=on
+      - "video=efifb:off"
   tasks:
     - name: Update bootloader kernel command line config file
       lineinfile:
@@ -12,18 +13,24 @@
         regexp: '^GRUB_CMDLINE_LINUX="'
       notify:
         - 'Update grub'
+        - "Reboot hypervisor"
     - name: Add required modules
       lineinfile:
         dest: /etc/modules
         line: "{{ item }}"
+        create: yes
       loop:
           - vfio
           - vfio_iommu_type1
           - vfio_pci
           - vfio_virqfd
+      notify:
+          - "Reboot hypervisor"
   handlers:
     - name: Update grub
-      shell: /usr/sbin/update-grub
+      shell: "/usr/sbin/update-grub"
+    - name: Reboot hypervisor
+      reboot: 
 
 - name: Configure GPU passthrough
   hosts: hypervisor
@@ -36,7 +43,13 @@
       lineinfile:
         dest: /etc/modprobe.d/blacklist.conf
         line: "blacklist {{ item }}"
+        create: yes
       loop:
           - radeon
           - nouveau
           - nvidia
+      notify:
+          - "Reboot hypervisor"
+  handlers:
+    - name: Reboot hypervisor
+      reboot: 
