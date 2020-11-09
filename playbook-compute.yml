@@ -44,6 +44,12 @@
         zone: public
         permanent: yes
         state: enabled
+    - name: Open up the port for BOINC GUI RPC
+      firewalld:
+        port: 31416/tcp
+        zone: public
+        permanent: yes
+        state: enabled
     - name: Reload firewall
       command: firewall-cmd --reload
     - name: Install BOINC
