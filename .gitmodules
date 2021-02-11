@@ -10,3 +10,6 @@
 [submodule "roles/ansible-role-nvidia-driver"]
 	path = roles/ansible-role-nvidia-driver
 	url = git@github.com:jpellman/ansible-role-nvidia-driver.git
+[submodule "roles/ansible-role-nginx"]
+	path = roles/ansible-role-nginx
+	url = git@github.com:jpellman/ansible-role-nginx.git
