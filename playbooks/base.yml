@@ -1,0 +1,178 @@
+---
+# Ansible service user is created via Kickstart.
+- name: Setup for Ansible
+  hosts: base-template
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Ensure Ansible service user's public key in authorized_keys file is current
+      authorized_key:
+        user: ansible
+        key: '{{ ansible_public_key }}'
+        state: present
+      ignore_errors: '{{ ansible_check_mode }}'
+      when: ansible_public_key is defined
+
+    # Used by pip module
+    - name: Install pip
+      package:
+        name:
+          - python-virtualenv
+          - python-setuptools
+          - python-pip
+        state: present
+
+    # Used by expect module
+    - name: Install pexpect
+      pip:
+        name: pexpect
+        state: present
+
+    # Used by MySQL module
+    - name: Make sure pymysql is present
+      pip:
+        name: pymysql
+        state: present
+
+    - name: Install epel-release
+      yum:
+        name: epel-release
+        state: present
+
+    # Used by selinux module
+    - name: Install packages used by SELinux module
+      yum:
+        name: 
+          - libselinux-python
+          - policycoreutils-python
+        state: present
+      become: yes
+
+# By default, turn off SELinux.  SELinux setup will be handled in other playbooks (if handled at all)
+- name: Security settings
+  hosts: base-template
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Disable SELinux
+      selinux:
+        state: disabled
+
+- name: User management / IdM
+  hosts: base-template
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Make user for me (John Pellman)
+      user:
+        name: jpellman
+        uid: 1000
+        gid: 1000
+        groups:
+          - wheel
+        state: present
+
+    - name: Ensure that jpellman's public key is present for key-based auth
+      authorized_key:
+        user: jpellman
+        key: '{{ jpellman_public_key }}'
+        state: present
+      ignore_errors: '{{ ansible_check_mode }}'
+      when: jpellman_public_key is defined
+
+- name: Install basic packages
+  hosts: base-template
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Run yum to install packages.
+      yum: 
+        name: 
+          - screen 
+          - htop
+          - whois
+        state: latest
+
+- name: Miscellaneous housekeeping related to elements that should be unique for each host
+  hosts: base-template
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Remove the host ssh keys if they exist
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items:
+        - /etc/ssh/ssh_host_dsa_key
+        - /etc/ssh/ssh_host_rsa_key
+        - /etc/ssh/ssh_host_ecdsa_key
+        - /etc/ssh/ssh_host_ed25519_key
+        - /etc/ssh/ssh_host_dsa_key.pub
+        - /etc/ssh/ssh_host_rsa_key.pub
+        - /etc/ssh/ssh_host_ecdsa_key.pub
+        - /etc/ssh/ssh_host_ed25519_key.pub
+
+    - name: Remove all lines that start with HWADDR in network-scripts
+      lineinfile:
+        path: '{{ item }}'
+        regexp: '^HWADDR'
+        state: absent
+      with_fileglob: '/etc/sysconfig/network-scripts/ifcfg-*'
+
+    - name: Remove all lines that start with UUID in network-scripts
+      lineinfile:
+        path: '{{ item }}'
+        regexp: '^UUID'
+        state: absent
+      with_fileglob: '/etc/sysconfig/network-scripts/ifcfg-*'
+
+    - name: Set the static hostname to localhost.localdomain
+      hostname:
+        name: localhost.localdomain
+
+    # This is where the "pretty hostname" and a bunch of other stuff that Lennart Poettering added is kept.
+    - name: Remove /etc/machine-info if it exists
+      file:
+        path: /etc/machine-info
+        state: absent
+
+    # See here: https://unix.stackexchange.com/questions/402999/it-is-ok-to-change-etc-machine-id
+    - name: Remove /etc/machine-id if it exists
+      file:
+        path: /etc/machine-id
+        state: absent
+
+    - name: Remove /var/lib/dbus/machine-id if it exists
+      file:
+        path: /var/lib/dbus/machine-id
+        state: absent
+
+    - name: Regenerate machine-id on first boot
+      copy:
+        content: |
+                [Unit]
+                Description=Generate machine-id
+                DefaultDependencies=no
+                Conflicts=shutdown.target
+                After=systemd-readahead-collect.service systemd-readahead-replay.service systemd-remount-fs.service
+                Before=systemd-sysusers.service sysinit.target shutdown.target
+                ConditionPathIsReadWrite=/etc
+
+                [Service]
+                Type=oneshot
+                RemainAfterExit=yes
+                ExecStart=/bin/systemd-machine-id-setup
+                ExecStartPost=/bin/systemctl disable systemd-machine-id-setup
+                TimeoutSec=30s
+
+                [Install]
+                WantedBy=multi-user.target
+        dest: /etc/systemd/system/systemd-machine-id-setup.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable service to regenerate machine-id
+      service:
+        name: systemd-machine-id-setup
+        enabled: yes
