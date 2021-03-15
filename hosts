@@ -1,16 +1,10 @@
 [hypervisor]
-maxwell.so
-
-[backups]
-backups.maxwell.so
-
-[nas]
-nas.maxwell.so
+hypervisor01.libjpel.so
 
 [compute]
-crick.so
-franklin.so
+compute01.libjpel.so
+compute01.libjpel.so
 
 [compute_gpu]
-crick.so
-franklin.so
+compute01.libjpel.so
+compute01.libjpel.so

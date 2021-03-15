@@ -31,7 +31,7 @@
     # Used by MySQL module
     - name: Make sure pymysql is present
       pip:
-        name: pymysql
+        name: pymysql==0.10.1
         state: present
 
     - name: Install epel-release
@@ -64,10 +64,16 @@
   become: yes
   tasks:
     - name: Make user for me (John Pellman)
+      group:
+        name: jpellman
+        gid:
+        state: present
+
+    - name: Make user for me (John Pellman)
       user:
         name: jpellman
         uid: 1000
-        gid: 1000
+        group: jpellman
         groups:
           - wheel
         state: present
