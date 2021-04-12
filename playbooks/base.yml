@@ -1,7 +1,7 @@
 ---
 # Ansible service user is created via Kickstart.
 - name: Setup for Ansible
-  hosts: base-template
+  hosts: base-template,storage,compute
   remote_user: ansible
   become: yes
   tasks:
@@ -50,7 +50,7 @@
 
 # By default, turn off SELinux.  SELinux setup will be handled in other playbooks (if handled at all)
 - name: Security settings
-  hosts: base-template
+  hosts: base-template,storage,compute
   remote_user: ansible
   become: yes
   tasks:
@@ -59,16 +59,17 @@
         state: disabled
 
 - name: User management / IdM
-  hosts: base-template
+  hosts: base-template,storage,compute
   remote_user: ansible
   become: yes
   tasks:
     - name: Make user for me (John Pellman)
       group:
         name: jpellman
-        gid:
+        gid: 1000
         state: present
 
+    # TODO- Add some form of password (or update the sudoers rules) so that I can actually sudo.
     - name: Make user for me (John Pellman)
       user:
         name: jpellman
@@ -87,7 +88,7 @@
       when: jpellman_public_key is defined
 
 - name: Install basic packages
-  hosts: base-template
+  hosts: base-template,storage,compute
   remote_user: ansible
   become: yes
   tasks:
@@ -97,8 +98,10 @@
           - screen 
           - htop
           - whois
+          - rsync
         state: latest
 
+# Only meant for VM templates
 - name: Miscellaneous housekeeping related to elements that should be unique for each host
   hosts: base-template
   remote_user: ansible

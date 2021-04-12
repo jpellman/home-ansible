@@ -4,6 +4,9 @@
 # such as GIMPS, BOINC, and FAH.
 # Currently only tested on CentOS 7
 
+# Universal configuration
+- import_playbook: base.yml
+
 - name: Install pre-requisites for GPU computing
   hosts: compute_gpu
   become: true
