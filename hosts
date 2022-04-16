@@ -1,11 +1,11 @@
 [hypervisor]
 hypervisor01.libjpel.so
 
+[hypervisor_gpu]
+hypervisor01.libjpel.so
+
 [compute]
 compute01.libjpel.so
 
 [compute_gpu]
 compute01.libjpel.so
-
-[storage]
-storage01.libjpel.so

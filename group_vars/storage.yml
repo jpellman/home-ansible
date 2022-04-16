@@ -1,4 +1,0 @@
-nfs_exports:
-  - export: /srv/nfs
-    hosts: 
-      - 192.168.1.1/24
