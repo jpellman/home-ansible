@@ -1,6 +1,3 @@
-[submodule "roles/ansible-twitter-backup"]
-	path = roles/ansible-twitter-backup
-	url = git@github.com:jpellman/ansible-twitter-backup.git
 [submodule "roles/ansible-rclone"]
 	path = roles/ansible-rclone
 	url = git@github.com:jpellman/ansible-rclone.git
@@ -13,6 +10,3 @@
 [submodule "roles/ansible-role-nginx"]
 	path = roles/ansible-role-nginx
 	url = git@github.com:jpellman/ansible-role-nginx.git
-[submodule "roles/ansible-role-nfs"]
-	path = roles/ansible-role-nfs
-	url = git@github.com:jpellman/ansible-role-nfs.git
