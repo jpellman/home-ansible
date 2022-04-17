@@ -1,5 +1,6 @@
 [hypervisor]
 hypervisor01.libjpel.so
+hypervisor02.libjpel.so
 
 [hypervisor_gpu]
 hypervisor01.libjpel.so
