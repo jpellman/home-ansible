@@ -1,3 +1,31 @@
+- name: Update apt repos and install packages
+  hosts: hypervisor
+  tasks: 
+    - name: Remove Proxmox VE Enterprise repo
+      apt_repository:
+        repo: "deb https://enterprise.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-enterprise"
+        state: absent
+    - name: Add Proxmox VE No-Subscription Repository to apt repository sources.list
+      apt_repository:
+        repo: "deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription"
+        state: present
+    - name: Install basic packages
+      apt:
+        name:
+          - parted
+          - htop
+          - atop
+          - iotop
+          - tcpdump
+          - sysstat
+          - strace
+          - linux-perf
+          - screen
+          - tmux
+          - rsync
+          - whois
+        state: present
+
 - name: Enable IOMMU kernel options for an Intel CPU.
   hosts: hypervisor_gpu
   become: yes
@@ -63,4 +91,5 @@
     - reverseproxy
   roles:
     - role: "ansible-role-nginx"
+
 
