@@ -1,7 +1,3 @@
-gpu_device_ids:
-  - "10de:1c81"
-  - "10de:0fb9"
-
 # From https://pve.proxmox.com/wiki/Web_Interface_Via_Nginx_Proxy
 nginx_vhosts:
   - listen: "80"

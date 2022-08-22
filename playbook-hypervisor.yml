@@ -2,15 +2,15 @@
   hosts: hypervisor
   tasks: 
     - name: Remove Proxmox VE Enterprise repo
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb https://enterprise.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-enterprise"
         state: absent
     - name: Add Proxmox VE No-Subscription Repository to apt repository sources.list
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription"
         state: present
     - name: Install basic packages
-      apt:
+      ansible.builtin.apt:
         name:
           - parted
           - htop
@@ -26,64 +26,6 @@
           - whois
         state: present
 
-- name: Enable IOMMU kernel options for an Intel CPU.
-  hosts: hypervisor_gpu
-  become: yes
-  vars:
-    grub_cmdline_add_args:
-      - quiet
-      - intel_iommu=on
-      - "video=efifb:off"
-  tasks:
-    - name: Update bootloader kernel command line config file
-      lineinfile:
-        dest: /etc/default/grub
-        line: GRUB_CMDLINE_LINUX="{{ grub_cmdline_add_args | join(' ') }}"
-        regexp: '^GRUB_CMDLINE_LINUX="'
-      notify:
-        - 'Update grub'
-        - "Reboot hypervisor"
-    - name: Add required modules
-      lineinfile:
-        dest: /etc/modules
-        line: "{{ item }}"
-        create: yes
-      loop:
-          - vfio
-          - vfio_iommu_type1
-          - vfio_pci
-          - vfio_virqfd
-      notify:
-          - "Reboot hypervisor"
-  handlers:
-    - name: Update grub
-      shell: "/usr/sbin/update-grub"
-    - name: Reboot hypervisor
-      reboot: 
-
-- name: Configure GPU passthrough
-  hosts: hypervisor_gpu
-  become: yes
-  tasks:
-    - name: Set up VFIO options
-      copy:
-        content: "options vfio-pci ids={{ gpu_device_ids | join(',') }}"
-        dest: /etc/modprobe.d/vfio.conf
-    - name: Blacklist GPU-related drivers
-      lineinfile:
-        dest: /etc/modprobe.d/blacklist.conf
-        line: "blacklist {{ item }}"
-        create: yes
-      loop:
-          - radeon
-          - nouveau
-          - nvidia
-      notify:
-          - "Reboot hypervisor"
-  handlers:
-    - name: Reboot hypervisor
-      reboot: 
-
 - name: Set up reverse proxy for Proxmox
   hosts: hypervisor
   become: yes
@@ -91,5 +33,19 @@
     - reverseproxy
   roles:
     - role: "ansible-role-nginx"
-
+  tasks: 
+    - name: Update nginx systemd unit
+      ansible.builtin.copy:
+        src: nginx.service
+        dest: /etc/systemd/system/nginx.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - "Restart nginx"
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
 
