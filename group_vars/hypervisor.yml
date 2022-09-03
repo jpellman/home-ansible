@@ -1,12 +1,12 @@
 # From https://pve.proxmox.com/wiki/Web_Interface_Via_Nginx_Proxy
 nginx_vhosts:
   - listen: "80"
-    server_name: "hypervisor01.libjpel.so"
+    server_name: "{{ ansible_fqdn }}"
     extra_parameters: |
       rewrite ^(.*) https://$host$1 permanent;
-    filename: "01-hypervisor01-libjpel-so-http.conf"
+    filename: "01-{{ ansible_fqdn | replace('.','-') }}-http.conf"
   - listen: "443 ssl"
-    server_name: "hypervisor01.libjpel.so"
+    server_name: "{{ ansible_fqdn }}"
     extra_parameters: |
       ssl on;
       ssl_certificate /etc/pve/local/pve-ssl.pem;
@@ -24,4 +24,4 @@ nginx_vhosts:
           proxy_send_timeout  3600s;
           send_timeout  3600s;
       }
-    filename: "01-hypervisor01-libjpel-so-https.conf"
+    filename: "01-{{ ansible_fqdn | replace('.','-') }}-https.conf"
