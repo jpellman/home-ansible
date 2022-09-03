@@ -1,12 +1,3 @@
-[submodule "roles/ansible-rclone"]
-	path = roles/ansible-rclone
-	url = git@github.com:jpellman/ansible-rclone.git
-[submodule "roles/ansible-gmvault"]
-	path = roles/ansible-gmvault
-	url = git@github.com:jpellman/ansible-gmvault.git
-[submodule "roles/ansible-role-nvidia-driver"]
-	path = roles/ansible-role-nvidia-driver
-	url = git@github.com:jpellman/ansible-role-nvidia-driver.git
 [submodule "roles/ansible-role-nginx"]
 	path = roles/ansible-role-nginx
 	url = git@github.com:jpellman/ansible-role-nginx.git
