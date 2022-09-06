@@ -1,7 +1,7 @@
 ---
 # Ansible service user is created via Kickstart.
 - name: Setup for Ansible
-  hosts: base-template,storage,compute
+  hosts: base-template
   remote_user: ansible
   become: yes
   tasks:
@@ -17,9 +17,10 @@
     - name: Install pip
       package:
         name:
-          - python-virtualenv
-          - python-setuptools
-          - python-pip
+          - python3
+          - python3-virtualenv
+          - python3-setuptools
+          - python3-pip
         state: present
 
     # Used by expect module
@@ -43,14 +44,14 @@
     - name: Install packages used by SELinux module
       yum:
         name: 
-          - libselinux-python
-          - policycoreutils-python
+          - python3-libselinux
+          - python3-policycoreutils
         state: present
       become: yes
 
 # By default, turn off SELinux.  SELinux setup will be handled in other playbooks (if handled at all)
 - name: Security settings
-  hosts: base-template,storage,compute
+  hosts: base-template
   remote_user: ansible
   become: yes
   tasks:
@@ -58,37 +59,8 @@
       selinux:
         state: disabled
 
-- name: User management / IdM
-  hosts: base-template,storage,compute
-  remote_user: ansible
-  become: yes
-  tasks:
-    - name: Make user for me (John Pellman)
-      group:
-        name: jpellman
-        gid: 1000
-        state: present
-
-    # TODO- Add some form of password (or update the sudoers rules) so that I can actually sudo.
-    - name: Make user for me (John Pellman)
-      user:
-        name: jpellman
-        uid: 1000
-        group: jpellman
-        groups:
-          - wheel
-        state: present
-
-    - name: Ensure that jpellman's public key is present for key-based auth
-      authorized_key:
-        user: jpellman
-        key: '{{ jpellman_public_key }}'
-        state: present
-      ignore_errors: '{{ ansible_check_mode }}'
-      when: jpellman_public_key is defined
-
 - name: Install basic packages
-  hosts: base-template,storage,compute
+  hosts: base-template
   remote_user: ansible
   become: yes
   tasks:
@@ -96,6 +68,7 @@
       yum: 
         name: 
           - screen 
+          - tmux
           - htop
           - whois
           - rsync
