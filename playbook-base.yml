@@ -35,43 +35,20 @@
         name: pymysql==0.10.1
         state: present
 
-    - name: Install epel-release
-      yum:
-        name: epel-release
-        state: present
-
-    # Used by selinux module
-    - name: Install packages used by SELinux module
-      yum:
-        name: 
-          - python3-libselinux
-          - python3-policycoreutils
-        state: present
-      become: yes
-
-# By default, turn off SELinux.  SELinux setup will be handled in other playbooks (if handled at all)
-- name: Security settings
-  hosts: base-template
-  remote_user: ansible
-  become: yes
-  tasks:
-    - name: Disable SELinux
-      selinux:
-        state: disabled
-
 - name: Install basic packages
   hosts: base-template
   remote_user: ansible
   become: yes
   tasks:
-    - name: Run yum to install packages.
-      yum: 
+    - name: Run apt-get to install packages.
+      apt: 
         name: 
           - screen 
           - tmux
           - htop
           - whois
           - rsync
+          - vim
         state: latest
 
 # Only meant for VM templates
