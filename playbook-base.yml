@@ -71,6 +71,33 @@
         - /etc/ssh/ssh_host_ecdsa_key.pub
         - /etc/ssh/ssh_host_ed25519_key.pub
 
+    # From https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/master/debian/raspberrypi-sys-mods.regenerate_ssh_host_keys.service
+    - name: Regenerate host ssh keys on first boot (Debian-based systems)
+      copy:
+        content: | 
+                [Unit]
+                Description=Regenerate SSH host keys
+                Before=ssh.service
+                ConditionFileIsExecutable=/usr/bin/ssh-keygen
+
+                [Service]
+                Type=oneshot
+                ExecStartPre=-/bin/sh -c "/bin/rm -f -v /etc/ssh/ssh_host_*_key*"
+                ExecStart=/usr/bin/ssh-keygen -A -v
+                ExecStartPost=/bin/systemctl disable regenerate_ssh_host_keys
+
+                [Install]
+                WantedBy=multi-user.target
+        dest: /etc/systemd/system/regenerate_ssh_host_keys.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable service to regenerate keys on Debian-based systems
+      service:
+        name: regenerate_ssh_host_keys
+        enabled: yes
+
     - name: Remove all lines that start with HWADDR in network-scripts
       lineinfile:
         path: '{{ item }}'
