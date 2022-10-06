@@ -1,0 +1,59 @@
+- name: Package installations
+  hosts: htpc
+  remote_user: htpc
+  become: yes
+  tasks: 
+    # lubuntu does not install openssh-server by default, so this must be configured manually
+    - name: Install pre-req for Kodi repository
+      ansible.builtin.apt:
+        name: software-properties-common
+        state: present
+    - name: Add Kodi repository
+      ansible.builtin.apt_repository:
+        repo: ppa:team-xbmc/ppa
+        state: present
+    - name: Install Kodi
+      ansible.builtin.apt:
+        name: kodi
+        state: present
+    - name: Install Steam dependencies
+      ansible.builtin.apt:
+        name:
+          - xdg-utils
+          - steam-libs-amd64
+          - steam-libs-i386
+          - ca-certificates
+          - coreutils
+          - libc6
+          - libnss3
+          - policykit-1
+          - python3
+          - python3-apt
+          - xterm
+          - xz-utils
+          - zenity
+        state: present
+    - name: Install Steam
+      ansible.builtin.apt:
+        deb: https://cdn.akamai.steamstatic.com/client/installer/steam.deb
+        state: present
+    - name: Add Chrome repository signing key
+      ansible.builtin.apt_key:
+        url: https://dl.google.com/linux/linux_signing_key.pub
+        state: present
+    - name: Add Chrome repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main"
+        state: present
+    - name: Install Chrome
+      ansible.builtin.apt:
+        name: google-chrome-stable
+        update_cache: yes
+        state: present
+    - name: Remove Firefox
+      ansible.builtin.command: "snap remove firefox"
+    - name: Download Advanced Emulator Launcher
+      ansible.builtin.get_url:
+        url: https://github.com/Wintermute0110/repository.wintermute0110/raw/master/plugin.program.advanced.emulator.launcher/plugin.program.advanced.emulator.launcher-0.10.1.zip
+        dest: /home/htpc/plugin.program.advanced.emulator.launcher-0.10.1.zip
+
