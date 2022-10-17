@@ -1,27 +1,84 @@
-- name: Package installations
+- name: HTPC Setup on top of Debian 11
   hosts: htpc
   remote_user: htpc
   become: yes
   tasks: 
-    # lubuntu does not install openssh-server by default, so this must be configured manually
+    - name: Ensure that the group for the HTPC user exists
+      ansible.builtin.group:
+        name: htpc
+        state: present
+    - name: Create the HTPC user
+      ansible.builtin.user:
+        name: htpc
+        group: htpc
+        groups: sudo
+        shell: /bin/bash
+        state: present
+    - name: Install Firefox and XFCE
+      ansible.builtin.apt:
+        name: 
+          - xorg
+          - desktop-base
+          - lightdm
+          - xfce4
+          - firefox-esr
+        update_cache: yes
+        state: present
+    - name: Enable lightdm
+      ansible.builtin.service:
+        name: lightdm
+        enabled: yes
     - name: Install pre-req for Kodi repository
       ansible.builtin.apt:
         name: software-properties-common
         state: present
     - name: Add Kodi repository
-      ansible.builtin.apt_repository:
-        repo: ppa:team-xbmc/ppa
+      ansible.builtin.apt:
+        name: kodi-repository-kodi
         state: present
     - name: Install Kodi
       ansible.builtin.apt:
         name: kodi
+        update_cache: yes
         state: present
+    - name: Ensure that user-specific Kodi config directory exists
+      ansible.builtin.file:
+        path: /home/htpc/.kodi
+        owner: htpc
+        group: htpc
+        state: directory
+    - name: Ensure that Kodi addons directory exists
+      ansible.builtin.file:
+        path: /home/htpc/.kodi/addons
+        owner: htpc
+        group: htpc
+        state: directory
+    - name: Install unzip
+      ansible.builtin.apt:
+        name: 
+          - unzip
+        state: present
+    - name: Download Advanced Emulator Launcher
+      ansible.builtin.unarchive:
+        src: https://github.com/Wintermute0110/repository.wintermute0110/raw/master/plugin.program.advanced.emulator.launcher/plugin.program.advanced.emulator.launcher-0.10.1.zip
+        remote_src: yes
+        dest: /home/htpc/.kodi/addons/
+    - name: Ensure that autostart directory exists
+      ansible.builtin.file:
+        path: /home/htpc/.config/autostart
+        owner: htpc
+        group: htpc
+        state: directory
+    - name: Add autostart entry
+      ansible.builtin.copy:
+        src: kodi.desktop
+        dest: /home/htpc/.config/autostart/kodi.desktop
+        owner: htpc
+        group: htpc
     - name: Install Steam dependencies
       ansible.builtin.apt:
         name:
           - xdg-utils
-          - steam-libs-amd64
-          - steam-libs-i386
           - ca-certificates
           - coreutils
           - libc6
@@ -37,23 +94,65 @@
       ansible.builtin.apt:
         deb: https://cdn.akamai.steamstatic.com/client/installer/steam.deb
         state: present
-    - name: Add Chrome repository signing key
-      ansible.builtin.apt_key:
-        url: https://dl.google.com/linux/linux_signing_key.pub
-        state: present
-    - name: Add Chrome repository
+    - name: Add Steam apt repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main"
+        repo: "deb [arch=amd64,i386] https://repo.steampowered.com/steam/ stable steam"
         state: present
-    - name: Install Chrome
+        filename: steam.list
+    - name: Add Steam source apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb-src [arch=amd64,i386] https://repo.steampowered.com/steam/ stable steam"
+        state: present
+        filename: steam.list
+    - name: Enable 32-bit arch for 32-bit compat libraries
+      ansible.builtin.command: dpkg --add-architecture i386
+    - name: Install more Steam dependencies
       ansible.builtin.apt:
-        name: google-chrome-stable
+        name:
+          - libc6:i386
+          - libegl1:i386
+          - libgbm1:i386
+          - libgl1-mesa-dri:i386
+          - libgl1:i386
+          - steam-libs-amd64
+          - steam-libs-i386
         update_cache: yes
         state: present
-    - name: Remove Firefox
-      ansible.builtin.command: "snap remove firefox"
-    - name: Download Advanced Emulator Launcher
+    - name: Install Wine and ScummVM
+      ansible.builtin.apt:
+        name: 
+          - wine
+          - scummvm
+        state: present
+    - name: Set default target to graphical
+      ansible.builtin.command: systemctl set-default graphical
+    - name: Add a directory for custom scripts
+      ansible.builtin.file:
+        path: /home/htpc/bin
+        state: directory
+    - name: Create custom scripts to open streaming services in Firefox kiosk mode.
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          firefox --kiosk {{ item.url }}
+        dest: "/home/htpc/bin/{{ item.name }}"
+        owner: htpc
+        group: htpc
+        mode: '0755'
+      loop:
+        - { name: "primevideo", url: "https://www.amazon.com/gp/video/storefront" }
+        - { name: "hulu", url: "https://www.hulu.com" }
+        - { name: "netflix", url: "https://www.netflix.com" }
+        - { name: "youtube", url: "https://www.youtube.com" }
+    - name: Download favicons to use as icons in Kodi
       ansible.builtin.get_url:
-        url: https://github.com/Wintermute0110/repository.wintermute0110/raw/master/plugin.program.advanced.emulator.launcher/plugin.program.advanced.emulator.launcher-0.10.1.zip
-        dest: /home/htpc/plugin.program.advanced.emulator.launcher-0.10.1.zip
-
+        url: "{{ item.url }}/favicon.ico"
+        dest: "/home/htpc/bin/{{ item.name }}.ico"
+        owner: htpc
+        group: htpc
+        mode: '0755'
+      loop:
+        - { name: "primevideo", url: "https://www.amazon.com" }
+        - { name: "hulu", url: "https://www.hulu.com" }
+        - { name: "netflix", url: "https://www.netflix.com" }
+        - { name: "youtube", url: "https://www.youtube.com" }
