@@ -130,6 +130,8 @@
       ansible.builtin.file:
         path: /home/htpc/bin
         state: directory
+        owner: htpc
+        group: htpc
     - name: Create custom scripts to open streaming services in Firefox kiosk mode.
       ansible.builtin.copy:
         content: |
