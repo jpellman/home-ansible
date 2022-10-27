@@ -1,0 +1,42 @@
+- name: Stop lightdm before installing NVIDIA driver
+  hosts: htpc
+  become: yes
+  tasks:
+    - name: Stop lightdm
+      ansible.builtin.service:
+        name: lightdm
+        state: stopped
+
+- name: Add NVIDIA driver
+  hosts: nvidia_gpu
+  become: yes
+  roles:
+    - role: "ansible-role-nvidia-driver"
+
+# For times when the NVIDIA driver isn't being installed and doesn't reboot the host.
+- name: Start lightdm after installing NVIDIA driver (if it isn't already started)
+  hosts: htpc
+  become: yes
+  tasks:
+    - name: Start lightdm
+      ansible.builtin.service:
+        name: lightdm
+        state: started
+
+- name: Add BOINC
+  hosts: boinc
+  become: yes
+  tasks:
+    - name: Install BOINC client
+      ansible.builtin.apt:
+        name: boinc-client
+        update_cache: yes
+        state: present
+    - name: Start and enable BOINC
+      ansible.builtin.service:
+        name: boinc-client
+        state: started
+        enabled: true
+    - name: Attach projects
+      ansible.builtin.command: "boinccmd --project_attach {{ item.project_url }} {{ item.account_key }}"
+      loop: "{{ boinc_projects }}"

@@ -1,2 +1,11 @@
 [hypervisor]
 hypervisor01.libjpel.so
+
+[htpc]
+htpc.libjpel.so
+
+[nvidia_gpu]
+htpc.libjpel.so
+
+[boinc]
+htpc.libjpel.so

@@ -1,3 +1,6 @@
 - src: https://github.com/jpellman/ansible-role-nginx
   version: master
   name: ansible-role-nginx
+- src: https://github.com/jpellman/ansible-role-nvidia-driver
+  version: master
+  name: ansible-role-nvidia-driver
